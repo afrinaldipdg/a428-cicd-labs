@@ -18,14 +18,20 @@ pipeline {
         }
         stage('Manual Approval') {
             steps {
-                input message: 'Apakah Anda setuju untuk melanjutkan ke tahap Deploy? (Klik "Proceed" untuk mengizinkan)'
+                script {
+                    def userInput = input message: 'Apakah Anda setuju untuk melanjutkan ke tahap Deploy? (Klik "Proceed" untuk mengizinkan)', parameters: [
+                        [$class: 'BooleanParameterDefinition', name: 'APPROVAL', defaultValue: false, description: 'Klik "Proceed" untuk mengizinkan']
+                    ]
+                    if (!userInput.APPROVAL) {
+                        error("Pengguna telah membatalkan proses. Tahap Deploy dibatalkan.")
+                    }
+                }
             }
         }
-        stage('Deploy') { 
+        stage('Deploy') {
             steps {
-                sh './jenkins/scripts/deliver.sh' 
+                sh './jenkins/scripts/deliver.sh'
                 sh './jenkins/scripts/kill.sh'
-                // Tambahkan perintah sleep di bawah ini
                 sleep time: 60, unit: 'SECONDS'
             }
         }
